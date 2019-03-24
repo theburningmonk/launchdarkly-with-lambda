@@ -1,0 +1,35 @@
+service: launchdarkly-with-lambda
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  region: us-east-1
+  stage: dev
+  tracing:
+    lambda: true
+  environment:
+    LAUNCHDARKLY_APIKEY: ${ssm:/launchdarkly/api-key~true}
+
+functions:
+  hello:
+    handler: handler.hello
+    timeout: 30
+    events:
+      - http:
+          path: /hello
+          method: get
+    environment:
+      WORLD_API: 
+        Fn::Join:
+          - ''
+          - - "https://"
+            - Ref: ApiGatewayRestApi
+            - ".execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}/world"
+
+  world:
+    handler: handler.world
+    timeout: 30
+    events:
+      - http:
+          path: /world
+          method: get
